@@ -1,0 +1,248 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{afterpage}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{subcaption}
+\newcommand{\dead}{\tau_{\text{dead}}}
+\newcommand{\overlap}{t_{\text{over}}}
+
+
+\begin{document}
+
+{\Large \bf Statistical Inference in the Presence of Dead-Time}\\ \\
+\smallskip
+{\bf Background:}  When models involve stochastics, statisticians distinguish between ``forward'' models, that describe
+measurable parameters in terms of underlying model parameters, and ``inverse models'', that describe underlying model
+parameters in terms of measured parameters.  Statisticians treat the outcomes of these two approaches separately, labelling the
+former as predictions and the latter as inferences.  If a forward model is known, there are standard Bayesian
+techniques that can be use to obtain an inverse model so that inferences can be made from measurements.
+
+\noindent {\bf Problems:}  The typical model of dead-time, a period of time during which detectors cannot receive additional signal,
+used within ISR is a forward model.
+In several projects, this
+forward model is being used as an inverse model without alteration to make inferences about physical parameters.
+A review of the literature could not find a discussion of the proper statistical inversion process of the dead-time model
+nor the proper ``subtraction'' of noise from the measurement.
+
+The typical dead-time model in fact describes the relationship between the expectation of the forward model, and the
+proper inversion of this model requires a description of the full ``forward'' distribution.
+A description of the full forward distribution is within the literature; however, we
+note that this description has some issues with numerical stability and
+analytic tractability.
+
+\noindent {\bf Specific Aims:}
+In this proposal, we propose
+\begin{enumerate}
+	{\item{{\bf Derivation of the Dead-time Modified Poisson Distribution:}  We are partly through a derivation that generalizes
+		the Poisson Distribution in the presence of dead-time and propose to complete this work.
+		We are confident that the results of this derivation
+		will resolve the numerical stability and analytic tractability issues with the current distribution described
+		within the literature.}}
+	{\item{{\bf The development of a methodology detailing statistical inference in the presence of dead-time:} We propose to invert the Dead-time Modified Poisson Distribution
+		using Baye's theorem.  Once the Dead-time Modified Poisson Distribution is ready, we
+		can introduce reasonable parameterizations of prior distributions that both should capture our expectation
+		of noise on our detected signal as well as our expectation of the frequency of our signal.}}
+\end{enumerate}
+
+\noindent{\bf Intellectual Merit:}
+The above works should produce two or more articles fit to be considered for publication.  The first will be aimed toward
+a theoretical statistical journal and the second towards a nuclear instrumentation journal.  As we could not
+readily find the appropriate statistical inversion process within the scientific literature, the addition of these two
+publications should improve the statistical methodology employed by scientists when they are making inferences
+from detectors where dead-time effects are important.  Specifically, this work will describe the correct procedure
+by which noise can be accounted for within statistical inferences from measurements where dead-time is relevant and
+it will provide both expectations for model parameters and their uncertainty from these measurements.
+
+\noindent {\bf Broader Impacts:}
+Part of this work will be done by the junior scientist, Karl Schmidt, who is currently working on a Masters of Science in Data Science at ...
+This experience will provide Karl with further training within this discpline and further mentorship opportunities
+with the senior scientists on the proposal, Drs. Predrag Punosevac and Brandon Zerbe, and it will provide
+him with some publications that he can used to communicate his burgeoning expertise.
+
+Also, the results of this work will be communicated with scientists throughout ISR.  The proper implementation
+of statistical inference in the presence of dead-time should both provide a more nuanced statistical description
+of the inferred parameters as well as improve the confidence ISR scientists have within determination of physical 
+parameters made from measurements where dead-time effects are present. 
+
+\end{document}
+
+which is 
+creating correct dInversion of the dead-time model is often incorrectly done within detector literature
+as well as some ISR projects,
+and proper inversion of this model would (1) improve our estimates of physical parameters made from detector 
+
+\section{Introduction}
+
+Many sensors operate by detecting discreet events
+such as the arrival of some real or virtual particle
+that is then used to infer information about some remote event.
+The first step in this inference typically requires relating the measured number of arrivals, $n$,
+back to a rate parameter, $\rho$.  Physical theory and experimental data on the emission and transmission
+processes describes the
+inference procedure related $\rho$ to parameters of the remote event.
+%Namely, theory and data describe at what rate
+%such particles are emitted from an event and then also inform how these rates evolve as they are transmitted
+%from the event to the detector; ``reversing'' this knowledge allows us to infer details about the
+%remote event from the inferred rate deterimined in the first step.
+%Therefore, to be able to most accurately and precisely
+%infer the parameters relevant to a remote event from a single or series of local measurements requires
+%an understanding of the fundamental physics involved in the emission, transmission, and detection processes.
+%
+Within this document, we focus on models for the physics of detection and specifically
+the inference of $\rho$ from an observation of $n$ arrivals.  We note that we do not treat
+the physical observation that an incoming particle only has some probability of interacting
+with the detector even when
+it passes ``through'' it; we assume that such effects are incorporated within the inference process elsewhere.
+
+\subsection{Background}
+
+One of the largest effects in the physics of detection is randomness, and
+there is a long history of 
+models exploring the effect of randomness on the arrival of events when the
+average rate of arrival is given by the rate parameter, $\rho$.
+Through modelling inter-particle arrival distribution times by the exponential distribution,
+now known as a Poisson process model, Poisson was able to
+derive an expression for the probability of $n$ arrivals being observerd
+during a fixed period of $T$ for any value of $n$;
+this collection of probabilities is now known as the Poisson distribution.
+%For conciseness, we call the probability for a specific $n$ within the Poisson distribution
+%``the probability of $n$ given $\rho$'' as the probability of $n$ implicitly depends on the
+%value of $\rho$.
+The Poisson distribution is often used to understand the statistics of detection;
+however, further considerations needs to be included in the modelling before analogous distributions may be
+used for inference with modern detectors.
+
+\subsubsection{Dead-time}
+
+The first effect is physical and is called the dead-time effect. 
+Dead-time is a period of time, mathematically denoted by $\dead$, after which
+an arrival is detected and during which further arrivals cannot be detected.  Dead-time
+arises physically from quantum characteristics of the materials/chemicals
+that are utilized to initiate the signal from an incoming event for down-stream processing within the detector.
+In this document, we are concerned with what is technically called non-paralyzable dead-time,
+where $\dead$ is treated as a constant; however, we shorten this to just dead-time
+and warn the reader to keep this in mind when reading other literature.
+
+The dead-time effect has been treated within
+the literature to varying degrees.  Denoting the number of detected events by $n$ and the period over which
+detection occurs as $T$,
+the typical ``dead-time model'' relates
+the expectation of the number of detected events, $<n>$, to the other parameters by
+$<n> = \frac{\rho T}{1 + \rho \dead}$.
+
+When presented in most textbooks, though, the
+expectation notation is often dropped in favor of using $n$.
+Without the indication that we are discussing a distribution, though, many
+scientists invert this equation to obtain the incorrect equation $\rho = \frac{n}{T - n \dead}$ [refs];
+however, this is not proper way to invert this relations.  The proper way to invert such distribution
+relations is known as statisical inference, and such methodologies require a description of the full distribution.
+
+Work done in the 1960-70's [ref] did an analysis of ``renewal processes''
+in order to obtain an approximate expression for not only the average but
+the full probability distribution.  However, the expression for this distribution is written
+in terms of differences of Gamma functions that has some numerical stability issues when the Gamma functions
+are close to one another.
+We are currently part-way through a generalization of the derivation of the Poisson distribution in the presence
+of dead-time for which we expect to obtain an easier to work-with Dead-time modified Poisson Distribution, for which
+we are asking for funds to finish.  We expect that the resulting derivation will be appropriate for
+publication in a peer-reviewed journal in theoretical statistics.
+
+Once we have an analytically tractable distribution, we propose doing statistical inference
+through Bayesian inference.  This will allow us to not only obtain the statistically correct
+inversion of the typical dead-time model, but it will also allow us to appropriately treat
+sources of noise that may be arriving in addition to the rate parameter of interest.
+
+%
+%There is a way to transform a forward model to an inverse model using
+%statistical techniques; to understand what these techniques do, we first need to
+%elucidate an aspect of the Poisson distribution.
+%To do so,
+%we reframe the ``inversion'' process by asking the following question:
+%``What is the best estimate of $\rho$ given we made the measurement $n$?''
+%Implicit in this question is an inversion of implicit conditional relation 
+%between $\rho$ and $n$ --- that is, the Poisson distribution 
+%describes probabilities of $n$ conditioned on the value of $\rho$ whereas we are interested in the probabilities 
+%where this conditional statement is inverted, i.e. probabilites of
+%$\rho$ conditioned on the value of $n$.
+%We call the ``inverted conditional'' distribution of the dead-time modified Poisson distribution
+%the inverted dead-time distribution.  
+
+%In statistical theory, a distribution derived from a forward model can be
+%related to the distribution derived from an inverse model through
+%the application of standard Bayesian techniques.  Specically,
+%the ``forward'' and ``inverse'' probabilities are related through
+%Bayes' theorem, so knowing one, as we do here, gives most of the insight
+%we need to be able to derive the other.
+%On the other hand, Bayes' theorem introduces a second probability distribution typically
+%called the prior probability, which is usually ``known'' through modelling.
+%The prior probability modelling
+%introduces additional parameters that are then typically trained against
+%data as well as theoretical expectation.  
+%Usually, a portion or all of the training data is taken from signal originating from background events
+%from which the designers of the detector wish to discriminate signals originating from events
+%of interest, and in this way, background is automatically incorporated into the underlying inference
+%distribution without further work.
+
+\subsection{Prospective}
+
+%In this document, we use Bayesian techniques to derive
+%the analytic ``inverted dead-time distribution''
+%from the analytic dead-time modified
+%Poisson distribution
+%with the goal of  the statistically correct inference
+%of both the rate and it's uncertainty.
+%The structure of the remainder of this document follows:
+\begin{enumerate}
+	{\item{{\bf Section \ref{sec:dead-time-dist}: The dead-time modified Poisson distribution} -- we present the generalization
+		of the Poisson distribution in the presence of dead-time that resolves the issues with the previous
+		expression of this distribution, and we very briefly overview this derivation.}}
+	{\item{{\bf Section \ref{sec:rate-dist}: The  inverted dead-time distribution} -- we derive
+		the  inverted dead-time distribution.  This derivation is short but requires the development of
+		a model of the prior probability, which we describe in detail.}}
+	{\item{{\bf Section \ref{sec:discussion} Discussion}:  We tabulate all parameters in their model and describe how they
+		can be estimated from data.
+		To provide additional practical context for the inference, 
+		we present visualizations for a specific choice of the values of the
+		parameters and walk through how the estimates of the rate and it's uncertainty are
+		obtained from the resulting inverted dead-time distribution after measurements are made.}}
+\end{enumerate}
+
+%We
+%denote this distribution by $p_{T, \dead}(n | \rho)$ where we have $T$ and $\dead$
+%in the sub-script to indicate that they are fixed constants and $n | \rho$ within the function
+%is standard nomenclature for conditional probabilities; within this notation,
+%the Poisson distribution is given by $p_T(n | \rho)$.
+%$p_{T, \dead}(\rho | n)$;
+
+%Adopting the parameterizatiSpeicifically, textbooks
+%quantify the dead-time model as $n = \frac{\rho T}{1 + \rho \tau}$
+
+%In statistics, a conditional distribution and its ``inverse'' are related through Bayes' theorem which
+%is given by $p(\rho | n) = \frac{p(n | \rho) p(\rho)}{p(n)}$ and is read as ``the inverted
+%dead-time probability is
+%$n$ is the probability of $n$ given $\rho$ times the probability of $\rho$ divided by the probability of $n$.
+%In Bayesian statistics, the probability of $\rho$ is known as the ``Prior probability'', and if it is correctly
+%modelled and the probability of $n$ given $\rho$ is known, the 
+%Here and since we 
+%have an expression for the dead-time modified Poisson distribution, we have an
+%analytic pathway to obtain the expression for the inverted dead-time distribution that not only treats
+%the ``inversion'' process appropriately but that can also incorporate background noise with statistical rigour.
+
+%\section{The dead-time modified Poisson distribution}\label{sec:dead-time-dist}
+
+%\section{The  inverted dead-time distribution}\label{sec:rate-dist}
+
+%\section{Discussion}\label{sec:discussion}
+
+\end{document}
