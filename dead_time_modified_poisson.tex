@@ -1,0 +1,514 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{afterpage}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{subcaption}
+\newcommand{\dead}{\tau_{\text{dead}}}
+\newcommand{\overlap}{t_{\text{over}}}
+
+\title{Informatic effects of dead-time measurements on the determination of the incoming rate of events}
+\author{Brandon Zerbe}
+
+\begin{document}
+\maketitle
+
+\section{Overview}
+
+For many detectors, an important limitation, especially for
+large signals, is
+known as dead-time.
+Dead-time is a period of time after an obervation during which
+additional detection is not possible.  Such
+limitations are fundamental to most detectors as can be
+seen in both electronic and biological systems; namely,
+electronic detectors employing scitillator detectors as well as biological
+systems that employ visual detectors (eyes)
+initiate down-stream signals interpretted as a detected 
+event from ``chemical'' excitation
+of detector-specific materials,
+and the materials used to initiate this signal
+have a characteristic relaxation time before they can again
+be chemically excited.  It is during this time that the detector is said to be dead as
+any incoming event arriving while the material is relaxing 
+will not excite the material and therefore will
+not initiate the down-stream signal, i.e.\ the event will not be detected.
+
+The effect of this process on the statistics seen by the detector have
+long been treated within the literature[ref]; however, we have a couple
+concerns about this work.
+The first concern is theoretical; the authors use the framework of
+a "renewal process" that is not standard within the theoretical physics community.
+The second concern is practical; the analytic equations for describing the
+distribution are derived by the authors are expressed 
+in terms of differences
+between CDF functions.
+This is a concern as these equations are therefore
+written in terms of differences of large sums of incomplete gamma functions
+that are difficult to work with both computationionally and analytically. 
+
+Fortunately, we are aware
+of an alternative derivation of the
+analytic equations for the distribution using
+theoretically standard Poisson processes.
+In this document, we discuss first the derivation
+of the Poisson distribution from a Poisson process
+and then generalize this to the case when dead-time effects
+are considered.
+
+\section{Stochastic modelling}\label{sec:Stochastics}
+
+The ultimate goal of the stochastic (forward) modelling in this document 
+is to derive the probability distribution for the number
+of counts, $n$, seen during the observation time, $T$, 
+given some rate, $\rho$, of incoming events.
+Without dead-time effects, this distribution is just the 
+Poisson distribution, which we denote as $p_{\rho, T}(n)$;
+in the presence of a dead-time, with a dead-time duration of $\dead$,
+we call the distribution the ``dead-time modified Poisson distribution''
+denoted by $p_{\rho, T, \dead}(n)$.
+
+Before proceeding to the derivation of the dead-time modified Poisson 
+distribution, we first 
+present some mathematical background of the features
+of Poisson processes that allow us to derive the Poisson Distribution.
+Namly, we assume that the reader is not intimately familiar with Poisson processes
+and therefore requires such background.  Feel free to skip the next
+section and continue onto the derivation of the dead-time modified
+Poisson distribution if you are not such a reader.
+
+\subsection{Poisson processes}
+
+Process models typically assume the random arrival of events, henceforth 
+the singular of which will be called ``arrival'', along some continuous 
+variable, which for our problem is time.   These models usually assume that
+the randomness is not affected by the time considered; in other words, resetting
+the ``0'' time does not change the model, and the rate at which these arrivals take
+place can be characterized by a constant ``rate parameter".
+Finally, the randomness is then modelled by
+choosing some probability distribution for the next arrival whose mean reproduces the
+rate parameter.
+
+The most commonly used process model utilizes the exponential distribution for the
+randomness; such a model is called a ``Poisson process''.  Within this model,
+the probability that the next arrival occurs between times $t$ and $t + dt$, 
+$p(t)$, is given by
+\begin{subequations}
+  \begin{align}
+	  p(t) &=  e^{-\rho t} \rho dt \label{eq:exp-dist}
+  \end{align}
+Often, this probability is equivalently 
+characterized by the inter-arrival time density,
+  \begin{align}
+  	f(t) &= \rho e^{-\rho t} \label{eq:exp-den}
+  \end{align}
+so that $p(t) = f(t) dt$ although this notation will not
+be used further here and is only mentioned to be consistent
+with existent literature.
+Often it is more convenient to look at the cumulative
+distribution function (CDF) for the probability;
+for this probability, the CDF is defined as
+	\begin{align}
+		P(T) &= \int_0^T p(t) ~ dt\nonumber\\
+				 &= 1 - e^{-\rho t} \label{eq:exp-cdf}
+	\end{align}
+\end{subequations}
+and represents the total probability that the next
+event will occur within time $t$.  We will use
+the CDF later within this document.
+
+It is from this fundamental process model that both the Poisson and the 
+related Erlang distributions can be derived.  Next,
+we will derive just the
+the Poisson distribution as this derivation will provide
+a sufficient framework to modify with the dead-time effect
+later.
+
+\subsubsection{Poisson distribution}
+
+The question we ask is ``Assuming a Poisson process,
+what is the distribution of the number of
+observed events, $n$, if the observation duration is $T$
+and the rate parameter is $\rho$?``
+The answer to this question is the Poisson distribution and will
+be derived here.
+
+We first determine the probability that $0$ events are observed,
+which we denote as $p_{T}(0 | \rho)$.  Note however, that we can restate
+this probability as the total probability that the next event
+does not arrive within the observation period $T$, which is simply the
+complement of Eq. (\ref{eq:exp-cdf}), i.e.
+\begin{align}
+	p_{\rho, T}(0) &= 1 - P(T) &= e^{-\rho T} 
+\end{align}
+
+Next, we can write the probability that $1$ particle is observed, which
+we denote as $p_{\rho, T}(1)$.  To derive this, let us examine the situation
+when a single event arrives between times $t$ and $t + dt$
+and no other event arrives afterwards.
+The probability of this occuring, $a_1(t)$, is the product of the probability
+that the next arrival occurs at time $t$, $p(t)$, and the probability
+that no particles aftwards, $p_{\rho, T - t}(0)$:
+\begin{align}
+	a_1(t) &= p(t) p_{\rho, T - t}(0)\nonumber\\
+			 &= \rho e^{-\rho T}dt\nonumber
+\end{align}
+Of course, a particle may arrive at any time $t$, so 
+we need to sum up all probabilities associated
+with the possible
+arrival times to determine $p_{\rho, T}(n = 0)$:
+\begin{align}
+	p_{\rho, T}(1) &= \int_0^T a_1(t)\nonumber\\
+	               &= \int_0^T \rho e^{-\rho T} dt\nonumber\\
+								 &= \rho T e^{-\rho T}
+\end{align}
+
+It should be apparent that the expression $a_1(t)$ suggests a recursion relation; specifically,
+we may generalize $a_n(t) = p(t) p_{\rho, T - t}(n - 1)$.  Such recursion relations
+suggest a derivation by induction which requires a ``guess'' of the form of 
+$p_{\rho, T}(n - 1)$ that agrees with prior expressions 
+and a proof that $p_{\rho, T}(n)$ satisfies that ``guess'' as well.
+Typically, this
+guess is intuited by explicitly deriving several more $p_{\rho, T}(n)$ for additional
+$n$'s; we will need to do this for the dead-time modified Poisson distribution.
+However, we forgo this intuition as the form of the Poisson distribution is already 
+well known.  Specifically, the guess for Poisson will be
+\begin{subequations}\label{eq:Poisson-dist}
+\begin{align}
+	p_{\rho, T}(n-1) = \frac{{(\rho T)}^{n-1}}{(n -1)!} e^{-\rho T}\label{eq:Poisson-guess}
+\end{align}
+and we will show that $p_{\rho, T}(n)$ likewise follows this form finishing our ``proof'' by
+induction.
+
+	Namely, introduce $a_n(t) = p(t) p_{\rho, T - t}(n - 1)$ represents, which
+the probability that the next event occurs between times $t$ and $t + dt$ and that
+$n-1$ events occur in the remaining time.  Defining the substitution $u = T- t$, 
+the probability that $n$ events occur during
+$T$ is then given by
+  \begin{align}
+	  p_{\rho, T}(n) &= \int_0^T a_n(T-t)\nonumber\\
+									 &= \int_0^T \rho e^{-\rho t} \frac{{(\rho (T - t))}^{n-1}}{(n -1)!} e^{-\rho (T-t)} dt \nonumber\\
+									 &= \int_0^{\rho T} e^{u -\rho T} \frac{{u}^{n-1}}{(n -1)!} e^{-u} du \nonumber\\
+									 &= e^{-\rho T} \int_0^{\rho T} \frac{{u}^{n-1}}{(n -1)!} du \nonumber\\
+									 &= \frac{{(\rho T)}^n}{n!} e^{-\rho T}\label{eq:Poisson-verify}
+  \end{align}
+We see that this has the same form as Eq. (\ref{eq:Poisson-guess}), so our ``proof'' is done.
+\end{subequations}
+
+\subsection{Dead-time modified Poisson distribution}
+
+We now modify the derivation of the Poisson distribution in order to obtain an analytic form for the
+dead-time modified distribution.  
+We denote the dead-time by the parameter $\dead$ and the probability of seeing $n$ events
+that have an incoming rate of $\rho$ during an observation period of $T$ by
+$p_{\rho, T, \dead}(n)$.
+In short, dead-time has one main effect on the analysis; 
+dead-time reduces the amount of time the Poisson process has available during
+which we may``observe'' events.
+
+This effect can be separated into two quantitative pieces:
+\begin{enumerate}
+	{\item{The observation of a particle results in subsequent events having $\dead$ less
+		time during which events can be observed.}}
+	{\item{The overall period of observation is reduced as there may be some overlap
+		of a dead-time period that extends from the previous observation period.}}
+\end{enumerate}
+Denote the second, currently unknown time as $\overlap$, and note that it is itself
+and random variable.  Likewise, in some detectors $\dead$ may be a random variable,
+but in this treatment we are assuming a non-paralyzable dead-time where $\dead$
+is treated as a constant.
+
+We first derive the dead-time modified Poisson distribution
+assuming $\overlap$ is known but is dependent of both $\dead$ and $\rho$;
+after obtaining the expression in terms of $\overlap$, $\dead$, $\rho$ and $T$,
+we then incorporate the random-nature of the overlap time and it's dependence
+on the dead-time and rate parameter to obtain
+an expression fully in terms of $\dead$, $\rho$ and $T$.
+
+We begin again with the probability of $n = 0$, $p_{T, \dead}(0 | \rho)$.  Note that since we have 
+some unknown, $\overlap$, during our observation window,
+the amount of time available for the Poisson process to occur is given the observation
+window less this overlap, $T - \overlap$.  By the argument we made to obtain the 
+Poisson distribution, we can write this probability as
+\begin{subequations}
+\begin{align}
+	p_{\rho, T, \dead}(0) &= 1 - P(T - \overlap) 
+\end{align}
+The above derivation assumes $T - \overlap > 0$; however, if it isn't,
+the the entire observation period
+is blocked by the dead-time effect.
+In other words, we know that in such a situation, we can't observe any.
+Making this explicit gives the full expression for
+this probability of
+\begin{align}
+	p_{\rho, T, \dead}(0)
+	  &= \begin{cases}
+			     e^{-\rho(T - \overlap)} & T  > \overlap\\
+			     1                       & \text{else}
+			 \end{cases}
+\end{align}
+\end{subequations}
+Note that when $\dead \to 0$, $\overlap \to 0$ and we reproduce the standard
+Poisson probability for $0$ arrivals as should be expected.
+
+Next we start to derive the probability of $n = 1$, $p_{\rho, T, \dead}(1)$
+by first obtaining an expression for the probability analogous to 
+$a_1$ in the derivation of the Poisson distribution that we will call $b_1$.  Note
+that after an arrival, the amount of time within the 
+observation period remaining will be reduced by $\dead$.  Therefore, we
+must break up our probability
+an arriving occuring between $t$ and $t + dt$ and no further particles
+arriving in the reamining time into two pieces:
+\begin{enumerate}
+	\item{$0 <= t < T - \overlap - \dead$: the probability that the next arrival
+		is at time $t$ and the probability that $0$ arrivals occurr
+		during the remaining time, $T - t - \overlap - \dead$.}
+	\item{$T - \overlap - \dead <= t <= T - \overlap$: the probability that the next arrival
+    is at time $t$.  The dead time associated with enforces
+		no further particles arriving and contributes to 
+		the overlap with the next observation period.}
+\end{enumerate}
+Mathematically, this probability looks like
+\begin{align}
+	b_1(t)
+	  &= \begin{cases}
+			   p(t) p_{\rho, T - t - \dead, \dead}(0) & t \in [0, T - \overlap - \dead]\\
+				 p(t)                             & t \in [T - \overlap - \dead <= t <= T - \overlap]\\
+				 0                                & \text{else}
+			 \end{cases}\nonumber\\
+		&= \begin{cases}
+			\rho e^{-\rho (T - \overlap - \dead)}dt & t \in [0, T - \overlap - \dead] \text{ and } T > \overlap + \dead\\
+				 \rho e^{-\rho t}dt                      & t \in [T - \overlap - \dead, T - \overlap] \text{ and } T > \overlap + \dead \\
+				 \rho e^{-\rho t}dt                      & t \in [0, T - \overlap] \text{ and } T \in [\overlap, \overlap + \dead] \\
+				 0                                       & \text{else}
+		\end{cases}\label{eq:b_1}
+\end{align}
+
+Analogous to the derivation of the Poisson distribution, we integrate over the probability
+in Eq. (\ref{eq:b_1})
+to obtain the probability of seeing one event during the observation time.  First we assume
+$T > \overlap + \dead$:
+\begin{subequations}
+\begin{align}
+	p_{\rho, T, \dead}(1) &= \int_0^{T-\overlap - \dead} b_1(t)\nonumber\\
+												 &= \int_0^{T-\overlap - \dead} \rho e^{-\rho (T - \overlap - \dead)}dt + \int_{T - \overlap - \dead}^{T - \overlap} \rho e^{-\rho t}dt\nonumber\\
+												 &= \rho (T-\overlap - \dead) e^{-\rho (T - \overlap - \dead)} + e^{-\rho (T - \overlap - \dead)} - e^{-\rho (T - \overlap)}\nonumber\\
+												 &= \left( \rho (T-\overlap - \dead) + 1 - e^{-\rho\dead}\right) e^{-\rho (T - \overlap - \dead)}
+\end{align}
+In the case that
+$T \in [\overlap, \overlap + \dead]$, the first integral and the lower limit of the second integral become $0$, and we
+need only evalute the second integral for the lower- and upper- limits of $0$ and $T - \overlap$, respectively.
+This evaluation gives $1 - e^{-\rho(T - \overlap)}$.
+Therefore, the total probability expression can be written as
+\begin{align}
+	p_{\rho, T, \dead}(1)
+	  &= \begin{cases}
+			\left( \rho (T-\overlap - \rho \dead) + 1 - e^{-\rho\dead} \right) e^{-\rho (T - \overlap - \dead)} & T > \overlap + \dead\\
+			1 - e^{-\rho(T - \overlap)}                                                                   & T \in [\overlap, \overlap + \dead]\\
+			0                                                                                             & \text{else}
+			 \end{cases}
+\end{align}
+\end{subequations}
+Note that when $\dead \to 0$, we again reproduce the Poisson distribution for $1$ arrival
+as should be expected. 
+
+To make subsequent analysis simpler, we now introduce the following notations:
+\begin{subequations}
+\begin{align}
+	c_n &= n \rho \dead\\
+	d_{n}(T) &= d_n = \rho(T - \overlap - n \dead) = \rho(T - \overlap) - c_n
+\end{align}
+\end{subequations}
+In this notation, the dead-time modified distribution for $n=0$ and $n=1$ are given by
+\begin{align*}
+	 p_{\rho, T, \dead}(0)
+	    &= \begin{cases}
+			     e^{-d_0} & T > \overlap\\
+				   0        & \text{else}
+			   \end{cases}\\
+	  p_{\rho, T, \dead}(1)
+	    &= \begin{cases}
+				(d_0 + 1 - c_1 - e^{-c_1})e^{-d_1} & T > \overlap + \dead\\
+				1 - e^{-d_0}               & T > [\overlap, \overlap + \dead]\\
+				   0        & \text{else}
+			   \end{cases}\\
+	\end{align*}
+
+Next we move onto obtaining an expression for the probability 
+of an arrival occuring between $t$ and $t + dt$ and the subsequent
+arrival occurring in the remaining time, $b_2$.
+Unlike when we had a single arrival above, we need not consider the first arrival occurring
+during $[T - \overlap - \dead, T - \overlap]$ as this blocks off the rest of the
+observation time from allowing the second arrival.
+Note also $d_1(T - t - \dead) = \rho(T - t - 2 \dead) = d_1(T) - \rho \dead - \rho t$
+where we will continue to denote $d_1 = d_1(T)$.
+Therefore, the probability can be written as
+\begin{subequations}
+\begin{align}
+	b_2(t)
+	  &= \begin{cases}
+			   p(t) p_{\rho, T - t - \dead}(1) & t \in [0, T - \overlap - \dead]\\
+				 0                                & \text{else}
+			 \end{cases}\nonumber\\
+	  &= \begin{cases}
+			\rho e^{-\rho t} \left( d_0 - \rho \dead - \rho t + 1 - c_1 - e^{-c_1}\right)e^{-d_1 + \rho \dead + \rho t}~dt & t \in \left[0, \frac{d_1}{\rho}\right] \text{ and } T - \dead > \overlap + \dead\\
+				 \rho e^{-\rho t}(1 - e^{-d_1 + \rho \dead + \rho t})dt                                                               & t \in \left[0, \frac{d_1}{\rho}\right] \\
+				  & \text{ and } T - \dead \in [\overlap, \overlap + \dead]\\
+			    0                                                                                         & \text{else}
+			 \end{cases}\nonumber\\
+	  &= \begin{cases}
+			\rho \left( d_1 - \rho t + 1 - c_1 - e^{-c_1}\right)e^{-d_2}~dt & t \in \left[0, \frac{d_1}{\rho}\right] \text{ and } T > \overlap + 2 \dead\\
+				 \rho (e^{-\rho t} - e^{-d_2})dt                                                               & t \in \left[0, \frac{d_1}{\rho}\right] \\
+				  & \text{ and } T \in [\overlap + \dead, \overlap + 2 \dead]\\
+			    0                                                                                         & \text{else}
+		\end{cases}\label{eq:b_2-pre}
+\end{align}
+Now we introduce the substitutions
+$u = d_1 - \rho t$ and
+$v = \rho t$. Now Eq. (\label{eq:b_2-pre}) can be written as
+\begin{align}
+	b_2(t) 
+	  &= \begin{cases}
+			(u + 1 - c_1 - e^{-c_1}) e^{-d_2} ~ du & u \in [0, d_{1}] \text{ and } T > \overlap + 2 \dead\\
+			 (e^{-v} - e^{-d_2}) ~ dv            & v \in [0, d_1] \text{ and } T \in [\overlap + \dead, \overlap + 2 \dead]\\
+			    0                   & \text{else}
+		\end{cases}\label{eq:b_2-with-constants}
+\end{align}
+where the change in the order of the interval is due to the sign on $t$ in the $u$ substitution.
+Integrating this gives
+%MISTAKE
+\begin{align}
+	p_{\rho, T, \dead}(2) 
+	  &= \begin{cases}
+			\frac{1}{2} d_{1}^2 e^{-d_{2}} + (1 - c_1 - e^{-c_1})d_{1} e^{-d_2} & T > \overlap + 2 \dead\\
+				 1 - e^{-d_1} - d_1 e^{-d_2}                             & T \in [\overlap + \dead, \overlap + 2 \dead]\\
+				 0                                               & \text{else}
+			 \end{cases}\nonumber\\
+	  &= \begin{cases}
+			\left(\frac{1}{2} (d_{0}^2 - 2 c_1d_0 + c_1^2) + (1- c_1 - e^{-c_1})(d_{0} - c_1)\right) e^{-d_2} & T > \overlap + 2 \dead\\
+				 1 - e^{-d_1} - d_1 e^{-d_1 + c_1}                             & T \in [\overlap + \dead, \overlap + 2 \dead]\\
+				 0                                               & \text{else}
+			 \end{cases}\nonumber\\
+	  &= \begin{cases}
+			\left(\frac{1}{2} d_{0}^2 + (1 - 2 c_1 - e^{-c_1}) d_{0}  - (1 - c_1 - \frac{1}{2} c_1^2 - e^{-c_1})\right)e^{-d_2} & T > \overlap + 2 \dead\\
+				 1 - e^{-d_1}(1 - d_1 e^{c_1})                     & T \in [\overlap + \dead, \overlap + 2 \dead]\\
+				 0                                               & \text{else}
+			 \end{cases}
+\end{align}
+\end{subequations}
+Here, note that $d_n = \rho (T - \overlap - n \dead) = d_0 - c_n$.
+
+We do one last calculation to obtain $p_{T, \dead}(3 | \rho)$, where we first need to
+calculate $b_3(t)$, the probability that the first event occurs at $t$ and the remaining
+$2$ events occur during the remaining time.  Again, we use
+$d_1(T - \dead - t) = d_1 - \rho \dead - \rho t$ and also
+$d_2(T - \dead - t) = d_2 - \rho \dead - \rho t$:
+\begin{subequations}
+\begin{align}
+	b_3(t)
+	  &= \begin{cases}
+			p(t) p_{\rho, T - t - \dead, \dead}(2) & t \in [0, T - \overlap - \dead]\\
+				 0                                & \text{else}
+			 \end{cases}\nonumber\\
+	  &= \begin{cases}
+			\rho e^{-\rho t} \bigg(\frac{1}{2} (d_{0} - \rho \dead - \rho t)^2 + (1 - 2 c_1 - e^{-c_1}) (d_{0} - \rho \dead - \rho t) & T - \dead > \overlap + 2 \dead\\
+			 \quad \quad - (1 - c_1 - \frac{1}{2} c_1^2 - e^{-c_1}) \bigg)e^{-d_2 + \rho \dead + \rho t} dt& \text{and } t \in \left[0, T - \overlap - \dead \right]\\
+				 \rho e^{-\rho t}(1 - e^{-d_1 + \rho \dead + \rho t}(1 - (d_1 -\rho \dead - \rho t ) e^{c_1})) & T \in [\overlap + 2 \dead, \overlap + 3 \dead]\\
+				 & \text{and } t \in \left[0, T - \overlap - \dead \right]\\
+				 0                                               & \text{else}
+		\end{cases}\nonumber\\
+	  &= \begin{cases}
+			\rho \bigg(\frac{1}{2} (d_{1} - \rho t)^2 + (1 - 2 c_1 - e^{-c_1}) (d_{1} - \rho t) & T - \dead > \overlap + 2 \dead\\
+			 \quad \quad - (1 - c_1 - \frac{1}{2} c_1^2 - e^{-c_1}) \bigg)e^{-d_3} dt& \text{and } t \in \left[0, T - \overlap - \dead \right]\\
+				 \rho (e^{-\rho t} - e^{-d_2}(1 - (d_2 - \rho t ) e^{c_1})) & T \in [\overlap + 2 \dead, \overlap + 3 \dead]\\
+				 & \text{and } t \in \left[0, T - \overlap - \dead \right]\\
+				 0                                               & \text{else}
+		\end{cases}\label{eq:b_3-pre}
+\end{align}
+Now sub $u_1 = d_1 - \rho t$ and $u_2 = d_2 - \rho t$ and $v = \rho t$, we get
+\begin{align}
+	b_3(t)
+	  &= \begin{cases}
+			\left(\frac{1}{2} u_1^2 + (1 - 2 c_1 - e^{-c_1})u_1 - (1 - c_1 - \frac{1}{2} c_1^2 - e^{-c_1})\right)du_1 ~ e^{-d_3} & T > \overlap + 3 \dead\\
+			 & \text{and } u_1 \in [0, d_1]\\
+				 \left(e^{-v} - e^{-d_2}\right) dv + u_2 e^{-d_3} ~ d u & T \in [\overlap + 2 \dead, \overlap + 3 \dead]\\
+			 & \text{and } v \in [0, d_1] \text{and } u_2 \in [-c_1, d_2]\\
+				 0                                               & \text{else}
+		\end{cases}\label{eq:b_3-pre}
+\end{align}
+and doing the integration gives
+\begin{align}
+	p_{\rho, T, \dead}(3) 
+	  &= \begin{cases}
+			\left(\frac{1}{6} d_{1}^3 + \frac{1}{2} (1 - 2 c_1 - e^{-c_1})d_{1}^2 - (1 - c_1 - \frac{1}{2} c_1^2 - e^{-c_1}) d_1\right) e^{-d_3} & T > \overlap + 3 \dead\\
+				 1 - e^{-d_1} - d_1 e^{-d_2} - \frac{1}{2} (d_2^2 - c_1^2) e^{-d_3}       & T \in [\overlap + 2 \dead, \overlap + 3 \dead]\\
+				 0                                               & \text{else}
+			 \end{cases}\nonumber\\
+	  &= \begin{cases}
+			\bigg(\frac{1}{6} (d_{0}^3 - 3 c_1 d_0^2 + 3 c_1^2 d_0 - c_1^3) + \frac{1}{2} (1 - 2 c_1 - e^{-c_1})(d_{0}^2 - 2 c_1 d_0 + c_1^2) &\\
+			  \quad \quad - (1 - c_1 - \frac{1}{2} c_1^2 - e^{-c_1}) (d_0 - c_1)\bigg) e^{-d_3} & T > \overlap + 3 \dead\\
+				 1 - e^{-d_1} - (d_0 - c_1) e^{-d_2} - \frac{1}{2} ((d_0 - 2 c_1)^2 - c_1^2) e^{-d_3}       & T \in [\overlap + 2 \dead, \overlap + 3 \dead]\\
+				 0                                               & \text{else}
+			 \end{cases}\nonumber\\
+\end{align}
+\end{subequations}
+
+
+We now present the guess for $n >= 1$:
+\begin{subequations}
+  \begin{align}
+		p_{\rho, T, \dead}(n-1)
+	  &= \begin{cases}
+			\left(1 + \frac{n-1}{d_1}(1-e^{-\rho \dead})\right) \frac{1}{(n-1)!} d_{1}^{n-1} e^{-d_{n-1}} & T > \overlap + (n - 1) \dead\\
+				 1 - \frac{e^{-d_1} \Gamma(n-1, d_1 e^{\rho\dead})}{(n-2)! e^{-d_1e^{\rho\dead}}}                       & T \in [\overlap + (n - 2) \dead, \overlap + (n - 1) \dead]\\
+				 0                                               & \text{else}
+		\end{cases} \label{eq:mod-Pois-guess}
+	\end{align} 
+	Note that in the limit $\dead \to 0$ we have $p_{\rho, T, \dead}(n-1) = \frac{1}{(n-1)!} (\rho T)^{n-1} e^{-\rho T}$,
+	which was the (correct) guess the Poisson distribution.  Thus this guess reduces to the Poisson distribution as should be
+	expected.
+
+	Using Eq. (\ref{eq:mod-Pois-guess}), we can write $b_n(t)$, the probability that the first observation occurs at $t$ and $n - 1$
+	observations occur during the reamining time:
+\begin{align}
+	b_n(t)
+	  &= \begin{cases}
+			p(t) p_{\rho, T - t - \dead, \dead}(n - 1) & t \in [0, T - \overlap - \dead]\\
+				 0                                & \text{else}
+			 \end{cases}\nonumber\\
+	  &= \begin{cases}
+			\rho e^{-\rho t} \left(\frac{1}{2} (d_{1} - \rho \dead - \rho t)^2 + (1-e^{-c_1}) (d_{1} - \rho \dead - \rho t) \right)e^{-d_2 + \rho \dead + \rho t} dt & T - \dead > \overlap + 2 \dead\\
+			 & \text{and } t \in \left[0, \frac{d_1}{\rho}\right]\\
+				 \rho e^{-\rho t} \left(1 - e^{-d_1 + \rho \dead + \rho t} - (d_1 - \rho \dead - \rho t) e^{-d_2 + \rho \dead + \rho t}\right) dt & T - \dead \in [\overlap + \dead, \overlap + 2 \dead]\\
+				 & \text{and } t \in \left[0, \frac{d_1}{\rho}\right]\\
+				 0                                               & \text{else}
+		\end{cases}\nonumber\\
+	  &= \begin{cases}
+			\rho \left(\frac{1}{2} (d_{2} - \rho t)^2 + (1-e^{-c_1}) (d_{2} - \rho t) \right)e^{-d_3} dt & T > \overlap + 3 \dead\\
+			 & \text{and } t \in \left[0, \frac{d_1}{\rho}\right]\\
+				 \rho \left(e^{-\rho t} - e^{-d_2} - (d_2 - \rho t) e^{-d_3}\right) dt & T \in [\overlap + 2 \dead, \overlap + 3 \dead]\\
+			 & \text{and } t \in \left[0, \frac{d_1}{\rho}\right]\\
+				 0                                               & \text{else}
+		\end{cases}\label{eq:b_3-pre}
+\end{align}
+With the $u$ and $v$ substitutions, we get
+\end{subequations}
+
+For this document, we do not validate the dead-time modified Poisson distribution.
+To validate, we'd compare to the distribution in the existing literature and
+also obtain analytic forms for the moments.  We have done some of this work
+and can show this distribution numerically has the expected centralized moments,
+but futher analysis to look at the moments is time-consuming and beyond the
+scope of the derivation we present in this document.
+
+\end{document}
